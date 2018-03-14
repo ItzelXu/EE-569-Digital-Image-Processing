@@ -1,0 +1,2 @@
+Parameters to be passed:
+input_image_name output_image_name input_image_size New_image_size bytesperpixel
