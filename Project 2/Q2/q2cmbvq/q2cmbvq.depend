@@ -1,0 +1,33 @@
+# depslib dependency file v1.0
+1519340886 source:f:\books\ee 569\assignment2\q2cmbvq\headers.cpp
+	<iostream>
+	<fstream>
+	<math.h>
+	<cmath>
+	<algorithm>
+	"Headers.h"
+
+1519360954 f:\books\ee 569\assignment2\q2cmbvq\headers.h
+
+1519846747 source:f:\books\ee 569\assignment2\q2cmbvq\main.cpp
+	<iostream>
+	<fstream>
+	<math.h>
+	<algorithm>
+	<cstdlib>
+	<stdlib.h>
+	<string.h>
+	"Headers.h"
+	"MyImgFunctions.h"
+
+1519671373 f:\books\ee 569\assignment2\q2cmbvq\myimgfunctions.h
+
+1519872254 source:f:\books\ee 569\assignment2\q2cmbvq\myimgfunctions.cpp
+	<iostream>
+	<fstream>
+	<math.h>
+	<cmath>
+	<algorithm>
+	"Headers.h"
+	"MyImgFunctions.h"
+

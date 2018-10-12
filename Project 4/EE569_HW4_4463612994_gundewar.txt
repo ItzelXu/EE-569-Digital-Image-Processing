@@ -1,0 +1,689 @@
+"""
+Final Project for EE 569 Spring 2018
+Program    : LeNet 5 on MNIST dataset
+@authors   : Pranav Gundewar     
+USC ID     : 4463612994         
+Email      : gundewar@usc.edu   
+Dataset    : MNIST dataset
+Instructor : Professor C.-C Kuo
+"""
+
+import numpy as np
+import tensorflow as tf
+import time
+import matplotlib.pyplot as plt
+from keras.datasets import mnist
+from tensorflow.examples.tutorials.mnist import input_data
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten, Reshape
+from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D
+from keras import optimizers
+from time import localtime, strftime
+#from keras.callbacks import TensorBoard
+
+# Loading the training, validation and testing data
+batch_size = 64
+num_classes = 10
+epochs = 200
+
+# the data, split between train and test sets
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+# Load training and eval data
+#mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+#X_train = mnist.train.images # Returns np.array
+#y_train = np.asarray(mnist.train.labels, dtype=np.int32)
+#X_test = mnist.test.images # Returns np.array
+#y_test = np.asarray(mnist.test.labels, dtype=np.int32)
+#X_valid = mnist.validation.images # Returns np.array
+#y_valid = np.asarray(mnist.validation.labels, dtype=np.int32)
+
+# define LeNet5 model
+def base_model():    
+    # create model
+    model = Sequential()
+    model.add(Reshape((28,28,1), input_shape=(784,)))
+    model.add(Conv2D(6, kernel_size=(5, 5), strides=(1, 1), 
+                     activation='sigmoid',padding='SAME', use_bias=True, kernel_initializer='RandomUniform'))
+    model.add(AveragePooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(16, (5, 5), activation='sigmoid', use_bias=True))
+    model.add(AveragePooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+    model.add(Conv2D(120, kernel_size=(5, 5), strides=(1, 1), 
+                     activation='sigmoid', use_bias=True))
+    model.add(Flatten())
+    model.add(Dense(84, activation='sigmoid', use_bias=True))
+    model.add(Dense(num_classes, activation='softmax'))
+    # define optimizer
+    sgd = optimizers.SGD(lr=0.1, momentum=0.25)
+    # Compile model
+    model.compile(loss='categorical_crossentropy', 
+                  optimizer=sgd, metrics=['accuracy'])
+    return model
+
+# build the model
+model = base_model()
+# print model information
+print(model.summary())
+print('Training the LeNet 5 Model')
+# Fit the model
+start = time.time()
+ts = localtime()
+#tensorboard = TensorBoard(log_dir='./logs/{}'.format(
+#        strftime("%Y-%m-%d %H-%M-%S", ts)), 
+#        histogram_freq=10, batch_size=32, write_graph=True,
+#        write_grads=True, write_images=True, embeddings_freq=0)
+#tensorboard.set_model(model)
+history = model.fit(X_train, y_train, validation_data=(X_test, y_test),
+                    epochs=epochs, batch_size=batch_size, verbose=1) #,callbacks=[tensorboard])
+end = time.time()
+print ("\nModel took %0.2f seconds to train\n"%(end - start))
+# Final evaluation of the model
+scores = model.evaluate(X_test, y_test, verbose=1)
+#model.save_weights("model_rn.h5", overwrite=True)
+#model.save('my_model_rn.h5', overwrite=True)
+## save as JSON
+#json_string = model.to_json()
+
+## save as YAML
+#yaml_string = model.to_yaml()
+print('LeNet 5 Test Error: %.4f%%' % (100-scores[1]*100))
+print('LeNet 5 Test Loss: %.4f%%' % scores[0])
+print('LeNet 5 Test Accuracy: %.4f%%' % (scores[1]*100))
+
+def plot_model_history(model_history):
+    fig, axs = plt.subplots(1,2,figsize=(12,5))
+    # summarize history for accuracy
+    axs[0].plot(range(1,len(model_history.history['acc'])+1),model_history.history['acc'])
+    axs[0].plot(range(1,len(model_history.history['val_acc'])+1),model_history.history['val_acc'])
+    axs[0].set_title('Model Accuracy')
+    axs[0].set_ylabel('Accuracy')
+    axs[0].set_xlabel('Epoch')
+#    axs[0].set_xticks(np.arange(1,len(model_history.history['acc'])+1),len(model_history.history['acc'])/10)
+    axs[0].legend(['Training', 'Validation'], loc='best')
+    # summarize history for loss
+    axs[1].plot(range(1,len(model_history.history['loss'])+1),model_history.history['loss'])
+    axs[1].plot(range(1,len(model_history.history['val_loss'])+1),model_history.history['val_loss'])
+    axs[1].set_title('Model Loss')
+    axs[1].set_ylabel('Loss')
+    axs[1].set_xlabel('Epoch')
+#    axs[1].set_xticks(np.arange(1,len(model_history.history['loss'])+1),len(model_history.history['loss'])/10)
+    axs[1].legend(['Training', 'Validation'], loc='best')
+    plt.show()
+    
+plot_model_history(history)
+
+def PlotHistory(train_value, test_value, value_is_loss_or_acc):
+    f, ax = plt.subplots()
+    ax.plot([None] + train_value, 'o-')
+    ax.plot([None] + test_value, 'x-')
+    # Plot legend and use the best location automatically: loc = 0.
+    ax.legend(['Train ' + value_is_loss_or_acc, 'Validation ' + value_is_loss_or_acc], loc = 'best') 
+    ax.set_title('Training/Validation ' + value_is_loss_or_acc + ' per Epoch')
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel(value_is_loss_or_acc)  
+    
+PlotHistory(history.history['loss'], history.history['val_loss'], 'Loss')
+PlotHistory(history.history['acc'], history.history['val_acc'], 'Accuracy')
+
+"""
+Final Project for EE 569 Spring 2018
+Program    : LeNet 5 on MNIST dataset Improvement
+@authors   : Pranav Gundewar     
+USC ID     : 4463612994         
+Email      : gundewar@usc.edu   
+Dataset    : MNIST dataset
+Instructor : Professor C.-C Kuo
+"""
+
+import numpy as np
+import tensorflow as tf
+import time
+import keras
+import matplotlib.pyplot as plt
+from tensorflow.examples.tutorials.mnist import input_data
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten, Reshape
+from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D
+from keras import optimizers
+from time import localtime, strftime
+from keras.callbacks import TensorBoard
+
+# Loading the training, validation and testing data
+batch_size = 128
+num_classes = 10
+epochs = 200
+
+# Load training and eval data
+mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+X_train = mnist.train.images # Returns np.array
+y_train = np.asarray(mnist.train.labels, dtype=np.int32)
+X_test = mnist.test.images # Returns np.array
+y_test = np.asarray(mnist.test.labels, dtype=np.int32)
+X_valid = mnist.validation.images # Returns np.array
+y_valid = np.asarray(mnist.validation.labels, dtype=np.int32)
+
+# define LeNet5 model
+def base_model():    
+    # create model
+    model = Sequential()
+    model.add(Reshape((28,28,1), input_shape=(784,)))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(32, kernel_size=(5, 5),
+                 activation='relu'))
+    model.add(Conv2D(64, (5, 5), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.5))
+    model.add(Flatten())
+    model.add(Dense(84, activation='relu'))
+#    model.add(Dropout(0.5))
+    model.add(Dense(num_classes, activation='softmax'))
+    # Compile model
+    model.compile(loss='categorical_crossentropy', 
+                  optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
+    return model
+
+# build the model
+model = base_model()
+# print model information
+print(model.summary())
+print('Training the LeNet 5 Model')
+# Fit the model
+start = time.time()
+ts = localtime()
+#tensorboard = TensorBoard(log_dir='./logs/{}'.format(
+#        strftime("%Y-%m-%d %H-%M-%S", ts)), 
+#        histogram_freq=10, batch_size=32, write_graph=True,
+#        write_grads=True, write_images=True, embeddings_freq=0)
+#tensorboard.set_model(model)
+history = model.fit(X_train, y_train, validation_data=(X_valid, y_valid),
+                    epochs=epochs, batch_size=batch_size, verbose=1) #,callbacks=[tensorboard])
+end = time.time()
+print ("\nModel took %0.2f seconds to train\n"%(end - start))
+# Final evaluation of the model
+scores = model.evaluate(X_test, y_test, verbose=1)
+model_json = model.to_json()
+with open("model_json", "w") as json_file:
+  json_file.write(model_json)
+model.save_weights("model_improv.h5")
+print('LeNet 5 Test Error: %.4f%%' % (100-scores[1]*100))
+print('LeNet 5 Test Loss: %.4f%%' % scores[0])
+print('LeNet 5 Test Accuracy: %.4f%%' % (scores[1]*100))
+
+def plot_model_history(model_history):
+    fig, axs = plt.subplots(1,2,figsize=(12,5))
+    # summarize history for accuracy
+    axs[0].plot(range(1,len(model_history.history['acc'])+1),model_history.history['acc'])
+    axs[0].plot(range(1,len(model_history.history['val_acc'])+1),model_history.history['val_acc'])
+    axs[0].set_title('Model Accuracy')
+    axs[0].set_ylabel('Accuracy')
+    axs[0].set_xlabel('Epoch')
+#    axs[0].set_xticks(np.arange(1,len(model_history.history['acc'])+1),len(model_history.history['acc'])/10)
+    axs[0].legend(['Training', 'Validation'], loc='best')
+    # summarize history for loss
+    axs[1].plot(range(1,len(model_history.history['loss'])+1),model_history.history['loss'])
+    axs[1].plot(range(1,len(model_history.history['val_loss'])+1),model_history.history['val_loss'])
+    axs[1].set_title('Model Loss')
+    axs[1].set_ylabel('Loss')
+    axs[1].set_xlabel('Epoch')
+#    axs[1].set_xticks(np.arange(1,len(model_history.history['loss'])+1),len(model_history.history['loss'])/10)
+    axs[1].legend(['Training', 'Validation'], loc='best')
+    plt.show()
+    
+plot_model_history(history)
+
+def PlotHistory(train_value, test_value, value_is_loss_or_acc):
+    f, ax = plt.subplots()
+    ax.plot([None] + train_value, 'o-')
+    ax.plot([None] + test_value, 'x-')
+    # Plot legend and use the best location automatically: loc = 0.
+    ax.legend(['Train ' + value_is_loss_or_acc, 'Validation ' + value_is_loss_or_acc], loc = 'best') 
+    ax.set_title('Training/Validation ' + value_is_loss_or_acc + ' per Epoch')
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel(value_is_loss_or_acc)  
+    
+PlotHistory(history.history['loss'], history.history['val_loss'], 'Loss')
+PlotHistory(history.history['acc'], history.history['val_acc'], 'Accuracy')
+
+
+"""
+Final Project for EE 569 Spring 2018
+Program    : SAAK Transform Feature Extracion
+@authors   : Pranav Gundewar     
+USC ID     : 4463612994         
+Email      : gundewar@usc.edu   
+Dataset    : MNIST dataset
+Instructor : Professor C.-C Kuo
+"""
+from __future__ import print_function
+
+import argparse
+import os
+import sys
+import time
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow.contrib.learn.python.learn.datasets.mnist import read_data_sets
+# from scipy.misc import imresize
+from cv2 import resize
+from network import *
+
+# from network.model import SaakModel
+# from network.util import get_saak_anchors
+
+DATA_DIR = './data/'
+MODEL_DIR = './model-mnist-train-32x32.npy'
+RESTORE_MODEL_FROM = None
+SAAK_COEF_DIR = './coef-mnist-test-32x32.npy'
+RESTORE_COEF_FROM = None
+
+def get_argument():
+    parser = argparse.ArgumentParser(description="Compute Saak Coefficient for MNIST")
+    parser.add_argument("--data-dir", type=str, default=DATA_DIR,
+            help="directory to store mnist dataset")
+    parser.add_argument("--model-dir", type=str, default=MODEL_DIR,
+            help="directory to store extracted Saak anchor vectors")
+    parser.add_argument("--restore-model-from", type=str, default=RESTORE_MODEL_FROM,
+            help="stored saak model file (there will be no training if this parameter is provided)")
+    parser.add_argument("--restore-coef-from", type=str, default=RESTORE_COEF_FROM,
+            help="stored saak coefficients file (there will be no computation if this parameter is provided)")
+    parser.add_argument("--saak-coef-dir", type=str, default=SAAK_COEF_DIR,
+            help="di")
+    return parser.parse_args()
+
+def main():
+    args = get_argument()
+
+    # initialize tf session
+    sess = tf.Session()
+
+    # load MNIST data
+    mnist = read_data_sets(args.data_dir, reshape=False, validation_size=50000)
+    print("Input MNIST image shape: " + str(mnist.train.images.shape))
+
+    # resize MNIST images to 32x32
+    train_images = [resize(img,(32,32)) for img in mnist.train.images]
+    train_images = np.expand_dims(train_images, axis=3)
+    print("Resized MNIST images: " + str(train_images.shape))
+
+    # extract saak anchors
+    if args.restore_model_from is None:
+        anchors = get_saak_anchors(train_images, sess)
+        np.save(args.model_dir, {'anchors': anchors})
+    else:
+        print("\nRestore from existing model:")
+        data = np.load(args.restore_model_from).item()
+        anchors = data['anchors']
+        print("Restoration succeed!\n")
+
+    # build up saak model
+    print("Build up Saak model")
+    model = SaakModel()
+    model.load(anchors)
+
+    # prepare testing images
+    print("Prepare testing images")
+    input_data = tf.placeholder(tf.float32)
+    test_images = [resize(img,(32,32)) for img in mnist.test.images]
+    test_images = np.expand_dims(test_images, axis=3)
+
+    # compute saak coefficients for testing images
+    if args.restore_coef_from is None:
+        print("Compute saak coefficients")
+        out = model.inference(input_data, layer=0)
+        test_coef = sess.run(out, feed_dict={input_data: test_images})
+        train_coef = sess.run(out, feed_dict={input_data: train_images})
+        # save saak coefficients
+        print("Save saak coefficients")
+        np.save(args.saak_coef_dir, {'train': train_coef, 'test': test_coef})
+    else:
+        print("Restore saak coefficients from existing file")
+        data = np.load(args.restore_coef_from).item()
+        train_coef = data['train']
+        test_coef = data['test']
+
+
+    # fit svm classifier
+    train_coef = np.reshape(train_coef, [train_coef.shape[0], -1])
+    test_coef = np.reshape(test_coef, [test_coef.shape[0], -1])
+    print("Saak feature dimension: " + str(train_coef.shape[1]))
+
+if __name__ == "__main__":
+    main()
+
+
+from __future__ import print_function
+
+from itertools import product
+
+import numpy as np
+import tensorflow as tf
+import matplotlib.pyplot as plt
+import cv2
+
+import scipy.misc
+
+import _pickle as cPickle
+
+from sklearn.decomposition import PCA
+from sklearn.svm import SVC
+from sklearn.cluster import KMeans
+
+def _extract_batches(images, ks):
+    (num_img, height, width, channel) = images.shape
+
+    idx = range(0, height - ks + 1, ks) # in case index of overflow
+    idy = range(0, width - ks + 1, ks)
+    id_iter = [(x, y) for x in idx for y in idy]
+
+    batches = np.array([images[:,i:i+ks,j:j+ks,:] for (i, j) in id_iter])
+    print("Extracted image batch shape: " + str(batches.shape))
+
+    batches = np.reshape(batches, [-1, ks*ks*channel])
+    print("Processed image batch shape: " + str(batches.shape))
+
+    return batches
+
+def _fit_anchor_vectors(batches, ks, channel_in, lossy_rate=1, augment=True):
+    # remove mean
+    # print("Image mean: " + str(np.mean(batches, axis=0)))
+    batches = batches - np.mean(batches, axis=0)
+    # print("Image mean after removal: " + str(np.mean(batches, axis=0)))
+
+    # fit anchor vectors
+    pca = PCA()
+    pca.fit(batches)
+
+    # get number of anchor vectors to keep based on lossy rate
+    score = pca.explained_variance_ratio_
+    components_to_keep = np.searchsorted(score, lossy_rate)
+    print("Number of anchors to keep: " + str(components_to_keep))
+
+    # get anchor vectors
+    components = pca.components_[:components_to_keep,:]
+    print("Anchor vector shape: " + str(components.shape))
+    assert ks * ks * channel_in == components.shape[1]
+
+    if augment:
+        components = np.concatenate([components, -components], axis=0)
+        components_to_keep = components_to_keep * 2
+        print("Augmented anchor vector shape: " + str(components.shape))
+
+    # reshape anchor vectors
+    components = np.reshape(components, [-1, ks, ks, channel_in])
+    print("Reshaped anchor shape: " + str(components.shape))
+
+    # transpose anchor vectors to tensorflow format 
+    # [ks, ks, channel_in, channel_out]
+    components = components.transpose(1, 2, 3, 0)
+    print("Tensorflow formated anchor shape: " + str(components.shape))
+
+    # augment anchors
+    return components, components_to_keep
+
+def conv_and_relu(images, anchors, sess, ks):
+    kernel = tf.constant(anchors)
+    out = tf.nn.conv2d(images, kernel, strides=[1, 2, 2, 1], padding='SAME')
+    out = tf.nn.relu(out)
+    result = sess.run(out)
+    print("Saak coefficients shape: " + str(result.shape))
+    return result
+
+
+def get_saak_anchors(images, _sess=None, ks=2, max_layer=5, vis=None):
+    if _sess is None:
+        sess = tf.Session()
+    else:
+        sess = _sess
+
+    if images.dtype == 'uint8':
+        images = images.astype(np.float32)
+        images = images / 255.
+
+    anchors = []
+    channel_in = images.shape[3]
+
+    rf_size = []
+    n = min(images.shape[1], images.shape[2])
+    while n >= ks and len(rf_size) < max_layer:
+        n = n // ks
+        rf_size.append(n)
+
+    print("Start to extract Saak anchors:\n")
+
+    # np.save('p4.npy', images)
+
+    for i, _ in enumerate(rf_size):
+        print("Stage %d start:" % (i + 1, ))
+        batches = _extract_batches(images, ks)
+        anchor, channel_out = _fit_anchor_vectors(batches, ks, channel_in)
+        anchors.append(anchor)
+        images = conv_and_relu(images, anchor, sess, ks)
+        channel_in = channel_out
+
+        if vis is not None:
+            ind = range(len(batches))
+            np.random.shuffle(ind)
+            ind = ind[:1000]
+            projection = np.matmul([batches[k,:] for k in ind], np.reshape(anchor[:,:,:,:2], [-1,2]))
+            # np.save('p.npy', projection)
+            # np.save('p2.npy', anchor)
+            # np.save('p3.npy', batches)
+            print("projection shape " + str(projection.shape))
+            # plt.plot(projection[:,0], projection[:,1], 'o')
+            plt.scatter(projection[:,0], projection[:,1])
+            # plt.show()
+            plt.savefig('images/' + vis)
+
+        print("Stage %d end\n" % (i + 1, )) 
+
+    if _sess is None:
+        sess.close()
+
+    return anchors
+
+
+def display_kmeans(batches, kmeans, m=20, suffix=''):
+    n = batches.shape[0]
+    n_clusters = kmeans.n_clusters
+    res = []
+    for i in range(n_clusters):
+        imgs = []
+        while len(imgs) < m:
+            index = np.random.randint(n)
+            if kmeans.labels_[index] == i:
+                # img_index = index % 256
+                # patch_x = index / 256 / 16
+                # patch_y = index / 256 % 16
+                imgs.append(cv2.cvtColor(
+                    np.reshape(batches[index,:],[2,2,3]),
+                    cv2.COLOR_LAB2BGR
+                    ))
+        new_img = np.concatenate(imgs, axis=1)
+        res.append(new_img)
+        cv2.imwrite('images/voc_kmeans%s_lab_nc%d_%d.png' % (suffix, n_clusters, i), new_img)
+    new_img = np.concatenate(res, axis=0)
+    cv2.imwrite('images/voc_kmeans%s_lab_nc%d_all.png' % (suffix, n_clusters, ), new_img)
+    img2 = cv2.imread('images/voc_kmeans%s_lab_nc%d_all.png' % (suffix, n_clusters, ))
+    img2 = cv2.resize(img2, None, fx=10, fy=10, interpolation=cv2.INTER_NEAREST)
+    cv2.imwrite('images/voc_kmeans%s_lab_nc%d_all_resized.png' % (suffix, n_clusters, ), img2)
+
+    return res
+
+def display2_kmeans(images, kmeans, kmeans2, m=20, suffix='_ca'):
+    n, h, w, ch = images.shape
+    nc = kmeans.n_clusters
+    nc2 = kmeans2.n_clusters
+    res = []
+    res2 = []
+    for (i,j) in product(range(nc),range(nc2)):
+        imgs = []
+        imgs2 = []
+        while len(imgs) < m:
+            index = np.random.randint(n)
+            x = np.random.randint(h / 2) * 2
+            y = np.random.randint(w / 2) * 2
+            x2 = x / 4 * 4
+            y2 = y / 4 * 4
+            img1 = images[index,x:x+2,y:y+2,:]
+            img2_o = images[index,x2:x2+4,y2:y2+4,:]
+            img2 = cv2.resize(images[index,x2:x2+4,y2:y2+4,:],(2,2))
+            img1 = np.reshape(img1, [1,12])
+            img2 = np.reshape(img2, [1,12])
+            lb1 = kmeans.predict(img1)
+            lb2 = kmeans.predict(img2)
+            if lb1 == i and lb2 == j:
+                # img_index = index % 256
+                # patch_x = index / 256 / 16
+                # patch_y = index / 256 % 16
+                imgs.append(cv2.cvtColor(
+                    np.reshape(img1,[2,2,3]),
+                    cv2.COLOR_LAB2BGR
+                    ))
+                imgs2.append(cv2.cvtColor(
+                    img2_o,
+                    cv2.COLOR_LAB2BGR
+                    ))
+        new_img = np.concatenate(imgs, axis=1)
+        new_img_2 = np.concatenate(imgs2, axis=1)
+        res.append(new_img)
+        res2.append(new_img_2)
+        cv2.imwrite('images/voc_kmeans%s_lab_nc%d_%d.png' % (suffix, nc, i), new_img)
+        cv2.imwrite('images/voc_kmeans%s_lab_nc%d_%d_context.png' % (suffix, nc, i), new_img_2)
+
+    new_img = np.concatenate(res, axis=0)
+    new_img_2 = np.concatenate(res2, axis=0)
+
+    cv2.imwrite('images/voc_kmeans%s_lab_nc%d_all.png' % (suffix, nc, ), new_img)
+    img2 = cv2.imread('images/voc_kmeans%s_lab_nc%d_all.png' % (suffix, nc, ))
+    img2 = cv2.resize(img2, None, fx=10, fy=10, interpolation=cv2.INTER_NEAREST)
+    cv2.imwrite('images/voc_kmeans%s_lab_nc%d_all_resized.png' % (suffix, nc, ), img2)
+
+    cv2.imwrite('images/voc_kmeans%s_lab_nc%d_all_context.png' % (suffix, nc2, ), new_img_2)
+    img2 = cv2.imread('images/voc_kmeans%s_lab_nc%d_all_context.png' % (suffix, nc2, ))
+    img2 = cv2.resize(img2, None, fx=10, fy=10, interpolation=cv2.INTER_NEAREST)
+    cv2.imwrite('images/voc_kmeans%s_lab_nc%d_all_resized_context.png' % (suffix, nc2, ), img2)
+    
+
+def get_content_adaptive_saak_old(images, _sess=None, ks=2, n_clusters=5, vis=None):
+    n, h, w, ch = images.shape
+
+    batches = _extract_batches(images, ks)
+
+    kmeans = KMeans(n_clusters=n_clusters)
+    kmeans.fit(batches)
+
+    # print(kmeans.labels_)
+
+    print(kmeans.cluster_centers_)
+    # display_kmeans(batches, kmeans)
+
+    if vis is not None:
+        cluster = [[] for i in range(n_clusters)]
+        for k, b in enumerate(batches):
+            cluster[kmeans.labels_[k]].append(b)
+        for k in range(n_clusters):
+            cluster[k] = np.concatenate(np.expand_dims(cluster[k], axis=0), axis=0)
+            print(cluster[k].shape)
+            ch = 3
+            anchor, _ = _fit_anchor_vectors(cluster[k], ks, ch, augment=False)
+            anchor = np.array(anchor)
+            print('anchor shape: ' + str(anchor.shape))
+            ind = range(len(cluster[k]))
+            np.random.shuffle(ind)
+            ind = ind[:200]
+            t_batches = [cluster[k][l,:] for l in ind]
+            # t_batches = np.concatenate(t_batches, axis=0)
+            anchor = np.reshape(anchor[:,:,:,:2], [-1,2])
+            proj = np.matmul(t_batches, anchor)
+            plt.figure()
+            plt.scatter(proj[:,0], proj[:,1])
+            plt.savefig('images/%s_%d.png' % (vis, k))
+
+
+
+    # images_ds = [cv2.resize(img, None, fx=.5, fy=.5) for img in images]
+    # images_ds = np.array(images_ds)
+    # batches_ds = _extract_batches(images_ds, ks)
+    # kmeans2 = KMeans(n_clusters=n_clusters)
+    # kmeans2.fit(batches_ds)
+    # display_kmeans(batches_ds, kmeans2, suffix='_ds')
+
+    # display2_kmeans(images, kmeans, kmeans2)
+
+    
+
+def classify_svm(train_feature, train_label, test_feature, test_label):
+    assert train_feature.shape[1] == test_feature.shape[1]
+    assert train_feature.shape[0] == train_label.shape[0]
+    assert test_feature.shape[0] == test_label.shape[0]
+    svc = SVC()
+    svc.fit(train_feature, train_label)
+    accuracy = svc.score(test_feature, test_label)
+    return accuracy
+    
+
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Apr 24 22:28:36 2018
+
+@author: HP
+"""
+#%%
+import pandas as pd
+df1 = pd.read_csv('Set1.csv', delimiter = ',',header=None)
+df2 = pd.read_csv('Set2.csv', delimiter = ',',header=None)
+df3 = pd.read_csv('Set3.csv', delimiter = ',',header=None)
+df4 = pd.read_csv('Set4.csv', delimiter = ',',header=None)
+df5 = pd.read_csv('Set5.csv', delimiter = ',',header=None)
+df6 = pd.read_csv('Set6.csv', delimiter = ',',header=None)
+
+#%%
+frames = [df1, df2, df3, df4, df5, df6]
+X_train = pd.concat(frames)
+
+#%%
+y = pd.read_csv('Trainlabels.csv', delimiter = ',',header=None)
+y = y[:10000]
+X_test = pd.read_csv('Testdata.csv', delimiter = ',',header=None)
+y_test = pd.read_csv('Testlabels.csv', delimiter = ',',header=None)
+
+#%%
+from sklearn.decomposition import PCA
+pca = PCA(n_components=32)
+pca.fit(X_train)
+X = pca.transform(X_train)
+X_test = pca.transform(X_test)
+
+#%%
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
+clf = SVC()  # Create an object of SVM classifier
+clf.fit(X, y)   # Train the classifier
+y_pred = clf.predict(X_test)     # Predicting labels on Test Validation Data
+y_pred_train = clf.predict(X)     # Predicting labels on Test Validation Data
+print("Training accuracy using 32 components in PCA = {:.4f}".format(accuracy_score(y, y_pred_train)*100))
+print("Testing accuracy using 32 components in PCA = {:.4f}".format(accuracy_score(y_test, y_pred)*100))
+
+#%%
+from sklearn.ensemble import RandomForestClassifier
+clf1=RandomForestClassifier()
+clf1.fit(X, y)   # Train the classifier
+y_pred = clf1.predict(X_test)     # Predicting labels on Test Validation Data
+y_pred_train = clf.predict(X)     # Predicting labels on Test Validation Data
+print("Training accuracy using 32 components in PCA using Random Forest = {:.4f}".format(accuracy_score(y, y_pred_train)*100))
+print("Testing accuracy using 32 components in PCA using Random Forest = {:.4f}".format(accuracy_score(y_test, y_pred)*100))
+
+
+#%%
+from keras.utils import np_utils
+from sklearn.metrics import f1_score
+from sklearn.metrics import confusion_matrix
+import numpy as np
+y_pred = clf1.predict(X_test) # This will take a few seconds...
+#print("F1: %1.3f" % f1_score(y_test, y_pred, average='weighted'))
+#y_pred = np.argmax(y_pred,axis=1)
+#print (y_pred.shape)
+#for ix in range(10):
+#    print (ix, confusion_matrix(np.argmax(y_test,axis=1), y_pred)[ix].sum())
+print (confusion_matrix(y_test, y_pred))

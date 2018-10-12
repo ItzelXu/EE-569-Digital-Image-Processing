@@ -1,0 +1,15 @@
+# depslib dependency file v1.0
+1518384677 source:f:\books\ee 569\assignment2\q1a\main.cpp
+	<iostream>
+	<fstream>
+	<math.h>
+	<algorithm>
+	"Headers.h"
+
+1518299884 f:\books\ee 569\assignment2\q1a\headers.h
+	<iostream>
+	<fstream>
+	<math.h>
+	<cmath>
+	<algorithm>
+

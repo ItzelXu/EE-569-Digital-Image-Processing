@@ -1,0 +1,38 @@
+# depslib dependency file v1.0
+1520130492 source:f:\books\ee 569\assignment2\countinggame\myimgfunctions.cpp
+	<iostream>
+	<fstream>
+	<math.h>
+	<cmath>
+	<algorithm>
+	"math.h"
+	"string.h"
+	<stdlib.h>
+	"MyImgfunctions.h"
+	"Headers.h"
+
+1520130325 f:\books\ee 569\assignment2\countinggame\myimgfunctions.h
+
+1520123863 f:\books\ee 569\assignment2\countinggame\headers.h
+
+1520124663 source:f:\books\ee 569\assignment2\countinggame\headers.cpp
+	<iostream>
+	<fstream>
+	<math.h>
+	<cmath>
+	<algorithm>
+	"Headers.h"
+
+1520156145 source:f:\books\ee 569\assignment2\countinggame\main.cpp
+	<iostream>
+	<fstream>
+	<math.h>
+	<cstdlib>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<vector>
+	<algorithm>
+	"Headers.h"
+	"MyImgFunctions.h"
+
